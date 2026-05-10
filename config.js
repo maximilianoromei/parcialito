@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════
 //  config.js — generado por Panel Docente
-//  10/5/2026, 03:29:06
+//  10/5/2026, 04:12:13
 // ════════════════════════════════════════════
 
 const EXAM_CONFIG = {
@@ -8,7 +8,7 @@ const EXAM_CONFIG = {
   subtitulo: "Cátedra Favier Dubois - Facultad de Ciencias Económicas - UBA",
   timerMinutos: 12,
   sheetsWebhookUrl: "https://script.google.com/macros/s/AKfycbwpx-n8-Lj10bWrP5l9Hl_4LsCFhYY3MlDnVJwApHCU5iEcRx6pUxa97OKhLk_FiV4/exec",
-  feedbackHabilitado: false,
+  feedbackHabilitado: true,
   preguntas: [
     {
       tipo: "simple",
