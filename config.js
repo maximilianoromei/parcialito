@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════
 //  config.js — generado por Panel Docente
-//  10/5/2026, 01:58:58
+//  10/5/2026, 02:32:42
 // ════════════════════════════════════════════
 
 const EXAM_CONFIG = {
@@ -8,7 +8,7 @@ const EXAM_CONFIG = {
   subtitulo: "Cátedra Favier Dubois · UBA Derecho",
   timerMinutos: 10,
   sheetsWebhookUrl: "https://script.google.com/macros/s/AKfycbwpx-n8-Lj10bWrP5l9Hl_4LsCFhYY3MlDnVJwApHCU5iEcRx6pUxa97OKhLk_FiV4/exec",
-  feedbackCode: "",
+  feedbackCode: "5C7FVQ",
   preguntas: [
     {
       tipo: "simple",
