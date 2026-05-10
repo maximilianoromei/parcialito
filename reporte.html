@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte de Examen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #e2e0d8;
+    --accent: #1d3557;
+    --accent2: #457b9d;
+    --gold: #c9a84c;
+    --text: #1a1a24;
+    --text2: #6b6a78;
+    --correct: #2d6a4f;
+    --correct-bg: #d8f3dc;
+    --wrong: #9b2226;
+    --wrong-bg: #fde8e8;
+    --warn: #e76f51;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── IMPORT SCREEN ── */
+  #import-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+  .import-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px;
+    max-width: 640px;
+    width: 100%;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.07);
+  }
+  .import-card h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .import-card p {
+    color: var(--text2);
+    font-size: 0.95rem;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+  .steps {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  .steps ol { padding-left: 18px; }
+  .steps li { font-size: 0.9rem; color: var(--text2); line-height: 2; }
+  .steps li strong { color: var(--text); }
+  .steps code {
+    background: var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+  }
+
+  textarea#csv-input {
+    width: 100%;
+    min-height: 160px;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  textarea#csv-input::placeholder { color: #585b70; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; }
+  .btn-primary:hover { background: #2a4a75; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+  .btn-ghost:hover { border-color: var(--accent2); color: var(--accent); }
+  .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+
+  /* ── REPORT ── */
+  #report-screen { display: none; }
+
+  .report-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 32px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .report-header::before {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .report-header::after {
+    content: '';
+    position: absolute;
+    right: 60px; bottom: -80px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+  .report-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .report-header .meta { opacity: 0.65; font-size: 0.88rem; }
+  .header-actions {
+    position: absolute;
+    top: 24px; right: 32px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .content { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+  /* ── STAT CARDS ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-card .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-card .stat-val.green { color: var(--correct); }
+  .stat-card .stat-val.gold  { color: var(--gold); }
+  .stat-card .stat-val.red   { color: var(--wrong); }
+  .stat-card .stat-label { font-size: 0.78rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ── SECTION TITLES ── */
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    margin-top: 36px;
+  }
+  .section-head h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--accent);
+  }
+  .section-head .line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── QUESTION ANALYSIS ── */
+  .q-analysis-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 14px;
+  }
+  .q-analysis-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .q-num-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .q-analysis-text { font-weight: 500; flex: 1; font-size: 0.95rem; line-height: 1.5; }
+  .q-pct-badge {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .q-pct-badge.good { color: var(--correct); }
+  .q-pct-badge.mid  { color: var(--warn); }
+  .q-pct-badge.bad  { color: var(--wrong); }
+
+  /* Bar */
+  .q-bar-wrap { margin-bottom: 14px; }
+  .q-bar-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text2); margin-bottom: 4px; }
+  .q-bar-track { height: 8px; background: var(--wrong-bg); border-radius: 4px; overflow: hidden; }
+  .q-bar-fill  { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+  .q-bar-fill.good { background: var(--correct); }
+  .q-bar-fill.mid  { background: var(--warn); }
+  .q-bar-fill.bad  { background: var(--wrong); }
+
+  /* Option breakdown */
+  .op-breakdown { display: flex; flex-direction: column; gap: 6px; }
+  .op-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    font-size: 0.88rem;
+    border: 1px solid transparent;
+  }
+  .op-row.correct-op { background: var(--correct-bg); border-color: rgba(45,106,79,0.2); }
+  .op-row.wrong-op   { background: #fafafa; border-color: var(--border); }
+  .op-icon { font-size: 0.9rem; flex-shrink: 0; width: 18px; }
+  .op-text { flex: 1; }
+  .op-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  .op-minibar { width: 60px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+  .op-minibar-fill { height: 100%; border-radius: 3px; background: var(--accent2); }
+  .op-row.correct-op .op-minibar-fill { background: var(--correct); }
+
+  /* ── STUDENTS TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+  thead { background: var(--accent); color: #fff; }
+  thead th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 11px 14px; vertical-align: middle; }
+  .td-name { font-weight: 500; }
+  .td-dni  { font-family: 'DM Mono', monospace; color: var(--text2); font-size: 0.82rem; }
+  .td-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .td-score.high { color: var(--correct); }
+  .td-score.mid  { color: var(--warn); }
+  .td-score.low  { color: var(--wrong); }
+  .td-pct { font-size: 0.8rem; color: var(--text2); }
+
+  /* Answer dots per student */
+  .dots { display: flex; gap: 4px; flex-wrap: wrap; }
+  .dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    font-size: 0.6rem;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    cursor: default;
+    title: attr(data-tip);
+  }
+  .dot.c { background: var(--correct); }
+  .dot.w { background: var(--wrong); }
+  .dot.s { background: var(--border); }
+
+  /* ── PRINT ── */
+  @media print {
+    .header-actions, #import-screen, .no-print { display: none !important; }
+    body { background: #fff; }
+    .report-header { background: var(--accent) !important; -webkit-print-color-adjust: exact; }
+    .q-analysis-card, .stat-card, table { break-inside: avoid; }
+  }
+
+  @media (max-width: 600px) {
+    .report-header { padding: 24px 20px; }
+    .content { padding: 20px 16px; }
+    .import-card { padding: 28px 20px; }
+    .header-actions { position: static; margin-top: 16px; }
+  }
+
+  .chip {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.75rem;
+    color: var(--text2);
+    margin-left: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ IMPORT SCREEN ═══════════════ -->
+<div id="import-screen">
+  <div class="import-card">
+    <h1>📊 Reporte de Examen</h1>
+    <p>Pegue aquí los datos exportados de Google Sheets para generar el reporte visual.</p>
+
+    <div class="steps">
+      <ol>
+        <li>Abra su planilla <strong>Parcialitos — Respuestas</strong> en Google Sheets</li>
+        <li>Seleccione <strong>todas las filas</strong> del examen que quiere analizar (incluyendo el encabezado)</li>
+        <li>Copie con <code>Ctrl+C</code></li>
+        <li>Pegue aquí abajo con <code>Ctrl+V</code></li>
+        <li>Clic en <strong>Generar reporte</strong></li>
+      </ol>
+    </div>
+
+    <textarea id="csv-input" placeholder="Fecha	Nombre	DNI	Examen	Puntaje	Máximo	Tiempo (seg)	Detalle JSON
+10/5/2026	García, María	38123456	Derecho Comercial...	7	10	840	{&quot;0&quot;:{...}}"></textarea>
+
+    <div id="import-error" style="color:var(--wrong);font-size:0.85rem;margin-bottom:12px;display:none"></div>
+    <button class="btn btn-primary" onclick="processData()">📊 Generar reporte</button>
+  </div>
+</div>
+
+<!-- ═══════════════ REPORT SCREEN ═══════════════ -->
+<div id="report-screen">
+  <div class="report-header">
+    <div class="header-actions no-print">
+      <button class="btn btn-ghost btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3)" onclick="resetReport()">← Nuevo reporte</button>
+      <button class="btn btn-ghost btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3)" onclick="window.print()">🖨 Imprimir</button>
+    </div>
+    <h1 id="rpt-titulo">Reporte de Examen</h1>
+    <div class="meta" id="rpt-meta"></div>
+  </div>
+
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stat-grid" id="stat-grid"></div>
+
+    <!-- BY QUESTION -->
+    <div class="section-head">
+      <h2>Análisis por pregunta</h2>
+      <div class="line"></div>
+    </div>
+    <div id="questions-analysis"></div>
+
+    <!-- BY STUDENT -->
+    <div class="section-head">
+      <h2>Resultados por alumno</h2>
+      <div class="line"></div>
+    </div>
+    <div class="table-wrap">
+      <table id="students-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Alumno</th>
+            <th>DNI</th>
+            <th>Puntaje</th>
+            <th>%</th>
+            <th>Respuestas</th>
+            <th>Tiempo</th>
+          </tr>
+        </thead>
+        <tbody id="students-tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let parsedRows = [];
+
+function processData() {
+  const raw = document.getElementById('csv-input').value.trim();
+  const errEl = document.getElementById('import-error');
+  errEl.style.display = 'none';
+
+  if (!raw) { showErr('Pegue los datos de Google Sheets primero.'); return; }
+
+  // Split into lines (TSV from Sheets)
+  const lines = raw.split('\n').filter(l => l.trim());
+  if (lines.length < 2) { showErr('Se necesitan al menos 2 filas (encabezado + 1 alumno).'); return; }
+
+  // Detect if first line is header
+  const firstLine = lines[0].toLowerCase();
+  const hasHeader = firstLine.includes('nombre') || firstLine.includes('fecha') || firstLine.includes('examen');
+  const dataLines = hasHeader ? lines.slice(1) : lines;
+
+  parsedRows = [];
+  for (const line of dataLines) {
+    const cols = line.split('\t');
+    if (cols.length < 8) continue;
+    let detalle = {};
+    try {
+      let jsonStr = cols.slice(7).join('\t').trim();
+      // Handle Google Sheets JSON escaping
+      detalle = JSON.parse(jsonStr);
+    } catch(e) {
+      // Try to find JSON in line
+      const m = line.match(/(\{.*\})/);
+      if (m) { try { detalle = JSON.parse(m[1]); } catch(e2) {} }
+    }
+    parsedRows.push({
+      fecha:    cols[0]?.trim() || '',
+      nombre:   cols[1]?.trim() || '',
+      dni:      cols[2]?.trim() || '',
+      examen:   cols[3]?.trim() || '',
+      puntaje:  parseFloat(cols[4]) || 0,
+      maximo:   parseFloat(cols[5]) || 0,
+      tiempo:   parseInt(cols[6]) || 0,
+      detalle
+    });
+  }
+
+  if (!parsedRows.length) { showErr('No se pudieron leer los datos. Verifique que copió incluyendo la fila de encabezados.'); return; }
+
+  buildReport();
+}
+
+function showErr(msg) {
+  const el = document.getElementById('import-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function buildReport() {
+  const rows = parsedRows;
+  const examen = rows[0].examen || 'Examen';
+  const maximo = rows[0].maximo || 10;
+  const totalAlumnos = rows.length;
+  const promedio = rows.reduce((s,r) => s+r.puntaje, 0) / totalAlumnos;
+  const aprobados = rows.filter(r => (r.puntaje/r.maximo) >= 0.6).length;
+  const maxScore = Math.max(...rows.map(r => r.puntaje));
+  const minScore = Math.min(...rows.map(r => r.puntaje));
+
+  // Header
+  document.getElementById('rpt-titulo').textContent = examen;
+  document.getElementById('rpt-meta').textContent =
+    `${rows[0].fecha?.split(' ')[0] || ''} · ${totalAlumnos} alumnos · Máximo: ${maximo} pts`;
+
+  // Stat cards
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${totalAlumnos}</div><div class="stat-label">Alumnos</div></div>
+    <div class="stat-card"><div class="stat-val gold">${promedio.toFixed(1)}</div><div class="stat-label">Promedio</div></div>
+    <div class="stat-card"><div class="stat-val green">${aprobados}</div><div class="stat-label">Aprobados ≥60%</div></div>
+    <div class="stat-card"><div class="stat-val red">${totalAlumnos - aprobados}</div><div class="stat-label">Desaprobados</div></div>
+    <div class="stat-card"><div class="stat-val">${maxScore}</div><div class="stat-label">Nota máxima</div></div>
+    <div class="stat-card"><div class="stat-val">${minScore}</div><div class="stat-label">Nota mínima</div></div>
+  `;
+
+  // ── QUESTIONS ANALYSIS ──
+  // Collect all question indices
+  const allQKeys = new Set();
+  rows.forEach(r => { if(r.detalle) Object.keys(r.detalle).forEach(k => allQKeys.add(k)); });
+  const qKeys = [...allQKeys].sort((a,b) => parseInt(a)-parseInt(b));
+
+  const qDiv = document.getElementById('questions-analysis');
+  qDiv.innerHTML = '';
+
+  qKeys.forEach((qk, idx) => {
+    // Gather data for this question across all students
+    const sample = rows.find(r => r.detalle && r.detalle[qk]);
+    if (!sample) return;
+    const qInfo = sample.detalle[qk];
+    const preguntaText = qInfo.pregunta || `Pregunta ${idx+1}`;
+    const puntajeMax = qInfo.puntajeMax || 1;
+
+    // Count correct answers
+    let correctCount = 0;
+    // Count per option selected
+    const optionCounts = {}; // option text → count
+    const correctOptions = new Set();
+
+    rows.forEach(r => {
+      if (!r.detalle || !r.detalle[qk]) return;
+      const rd = r.detalle[qk];
+      if (rd.correcta) correctCount++;
+      (rd.seleccionadas || []).forEach(op => {
+        optionCounts[op] = (optionCounts[op] || 0) + 1;
+      });
+    });
+
+    // Find correct options from any student's detail
+    // We need to reconstruct from config — use the sample that got it right if possible
+    // Heuristic: look for options that appear in the "correct" student responses
+    // Actually we stored seleccionadas and correcta flag, so we approximate from config.js
+    let correctOpTexts = new Set();
+    // Try to get from EXAM_CONFIG if available
+    if (typeof EXAM_CONFIG !== 'undefined' && EXAM_CONFIG.preguntas[parseInt(qk)]) {
+      const cfgQ = EXAM_CONFIG.preguntas[parseInt(qk)];
+      cfgQ.opciones.filter(o => o.correcta).forEach(o => correctOpTexts.add(o.texto));
+    }
+
+    const answered = rows.filter(r => r.detalle && r.detalle[qk]).length;
+    const pct = answered ? Math.round((correctCount / answered) * 100) : 0;
+    const barClass = pct >= 70 ? 'good' : pct >= 40 ? 'mid' : 'bad';
+    const pctClass = barClass;
+
+    // Build option rows
+    let opHtml = '';
+    // Get all unique options from config or from answers
+    let allOptions = [];
+    if (typeof EXAM_CONFIG !== 'undefined' && EXAM_CONFIG.preguntas[parseInt(qk)]) {
+      allOptions = EXAM_CONFIG.preguntas[parseInt(qk)].opciones.map(o => ({ texto: o.texto, correcta: o.correcta }));
+    } else {
+      // Reconstruct from counts
+      Object.keys(optionCounts).forEach(t => allOptions.push({ texto: t, correcta: false }));
+    }
+
+    allOptions.forEach(op => {
+      const cnt = optionCounts[op.texto] || 0;
+      const pctOp = answered ? Math.round((cnt/answered)*100) : 0;
+      const rowClass = op.correcta ? 'correct-op' : 'wrong-op';
+      const icon = op.correcta ? '✓' : '·';
+      opHtml += `
+        <div class="op-row ${rowClass}">
+          <span class="op-icon">${icon}</span>
+          <span class="op-text">${escHtml(op.texto)}</span>
+          <div class="op-minibar"><div class="op-minibar-fill" style="width:${pctOp}%"></div></div>
+          <span class="op-count">${cnt} alumno${cnt!==1?'s':''} (${pctOp}%)</span>
+        </div>`;
+    });
+
+    qDiv.innerHTML += `
+      <div class="q-analysis-card">
+        <div class="q-analysis-header">
+          <span class="q-num-badge">P ${idx+1} · ${puntajeMax} pt${puntajeMax!==1?'s':''}</span>
+          <div class="q-analysis-text">${escHtml(preguntaText)}</div>
+          <div class="q-pct-badge ${pctClass}">${pct}%</div>
+        </div>
+        <div class="q-bar-wrap">
+          <div class="q-bar-label">
+            <span>Respuestas correctas: ${correctCount} / ${answered}</span>
+            <span>${pct}% de acierto</span>
+          </div>
+          <div class="q-bar-track">
+            <div class="q-bar-fill ${barClass}" style="width:${pct}%"></div>
+          </div>
+        </div>
+        <div class="op-breakdown">${opHtml}</div>
+      </div>`;
+  });
+
+  // ── STUDENTS TABLE ──
+  const sorted = [...rows].sort((a,b) => b.puntaje - a.puntaje);
+  const tbody = document.getElementById('students-tbody');
+  tbody.innerHTML = '';
+
+  sorted.forEach((r, i) => {
+    const pct = r.maximo ? Math.round((r.puntaje/r.maximo)*100) : 0;
+    const scoreClass = pct >= 70 ? 'high' : pct >= 40 ? 'mid' : 'low';
+    const min = Math.floor(r.tiempo/60);
+    const sec = r.tiempo%60;
+    const tiempoStr = r.tiempo ? `${min}′${String(sec).padStart(2,'0')}″` : '—';
+
+    // Dots
+    let dots = '';
+    qKeys.forEach((qk, qi) => {
+      if (!r.detalle || !r.detalle[qk]) {
+        dots += `<div class="dot s" title="P${qi+1}: Sin responder">·</div>`;
+      } else {
+        const correct = r.detalle[qk].correcta;
+        dots += `<div class="dot ${correct?'c':'w'}" title="P${qi+1}: ${correct?'Correcta':'Incorrecta'}">${qi+1}</div>`;
+      }
+    });
+
+    tbody.innerHTML += `
+      <tr>
+        <td style="color:var(--text2);font-size:0.8rem">${i+1}</td>
+        <td class="td-name">${escHtml(r.nombre)}</td>
+        <td class="td-dni">${r.dni}</td>
+        <td class="td-score ${scoreClass}">${r.puntaje} <span style="font-size:0.75rem;opacity:0.6">/ ${r.maximo}</span></td>
+        <td class="td-pct">${pct}%</td>
+        <td><div class="dots">${dots}</div></td>
+        <td style="color:var(--text2);font-size:0.82rem;font-family:'DM Mono',monospace">${tiempoStr}</td>
+      </tr>`;
+  });
+
+  // Show report
+  document.getElementById('import-screen').style.display = 'none';
+  document.getElementById('report-screen').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+function resetReport() {
+  document.getElementById('import-screen').style.display = 'flex';
+  document.getElementById('report-screen').style.display = 'none';
+  document.getElementById('csv-input').value = '';
+}
+
+function escHtml(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+
+<!-- Si está en el mismo repo, carga el config para enriquecer el reporte con las opciones correctas -->
+<script src="config.js" onerror="console.log('config.js no cargado, modo standalone')"></script>
+</body>
+</html>
