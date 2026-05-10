@@ -287,11 +287,11 @@
 </div>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('tab-config')">⚙ Configuración</button>
-  <button class="tab-btn" onclick="switchTab('tab-preguntas')">📝 Preguntas</button>
-  <button class="tab-btn" onclick="switchTab('tab-generar')">💾 Generar config.js</button>
-  <button class="tab-btn" onclick="switchTab('tab-feedback')">📊 Feedback</button>
-  <button class="tab-btn" onclick="switchTab('tab-sheets')">🔧 Apps Script</button>
+  <button class="tab-btn active" onclick="switchTab('tab-config', this)">⚙ Configuración</button>
+  <button class="tab-btn" onclick="switchTab('tab-preguntas', this)">📝 Preguntas</button>
+  <button class="tab-btn" onclick="switchTab('tab-generar', this)">💾 Generar config.js</button>
+  <button class="tab-btn" onclick="switchTab('tab-feedback', this)">📊 Feedback</button>
+  <button class="tab-btn" onclick="switchTab('tab-sheets', this)">🔧 Apps Script</button>
 </div>
 
 <div class="container">
@@ -498,11 +498,11 @@ function json(obj) {
 document.getElementById('apps-script-code').textContent = APPS_SCRIPT;
 
 // ════════════ TABS ════════════
-function switchTab(id) {
+function switchTab(id, el) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  event.target.classList.add('active');
+  if (el) el.classList.add('active');
   if (id === 'tab-preguntas') renderQuestions();
   if (id === 'tab-feedback') syncFeedbackDisplay();
 }
@@ -731,8 +731,6 @@ function downloadConfig() {
 }
 
 // ════════════ FEEDBACK TOGGLE ════════════
-let feedbackHabilitado = false;
-
 function setFeedback(val) {
   feedbackHabilitado = val;
   syncFeedbackDisplay();
@@ -765,20 +763,28 @@ function showToast(msg) {
 }
 
 // ── Prefill from config.js if present ──
+// config.js se carga ANTES de este script (ver orden en el HTML)
 window.addEventListener('DOMContentLoaded', () => {
   if (typeof EXAM_CONFIG !== 'undefined') {
     document.getElementById('cfg-titulo').value    = EXAM_CONFIG.titulo || '';
     document.getElementById('cfg-subtitulo').value = EXAM_CONFIG.subtitulo || '';
     document.getElementById('cfg-timer').value     = EXAM_CONFIG.timerMinutos || 30;
-    document.getElementById('cfg-url').value       = EXAM_CONFIG.sheetsWebhookUrl || '';
+    // No sobreescribir si ya tiene la URL real
+    const urlField = document.getElementById('cfg-url');
+    if (EXAM_CONFIG.sheetsWebhookUrl && EXAM_CONFIG.sheetsWebhookUrl !== 'URL_DE_TU_GOOGLE_APPS_SCRIPT') {
+      urlField.value = EXAM_CONFIG.sheetsWebhookUrl;
+    }
     feedbackHabilitado = EXAM_CONFIG.feedbackHabilitado || false;
     questions = JSON.parse(JSON.stringify(EXAM_CONFIG.preguntas || []));
     syncFeedbackDisplay();
     renderQuestions();
+    showToast('✅ Configuración cargada desde config.js');
   }
 });
 </script>
 
+<!-- config.js DEBE ir antes del cierre de body pero DESPUÉS del script principal -->
+<!-- El orden correcto es: este script → config.js                                -->
 <script src="config.js"></script>
 </body>
 </html>
