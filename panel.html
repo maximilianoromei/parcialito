@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Docente — Configurador de Examen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #dddbd2;
+    --accent: #2d4a7a;
+    --accent2: #5c8dc4;
+    --accent-light: #e8f0fa;
+    --text: #1a1a24;
+    --text2: #6b6a78;
+    --correct: #2e7d57;
+    --wrong: #c0392b;
+    --warn: #e67e22;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .top-bar {
+    background: var(--accent);
+    color: #fff;
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .top-bar h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+  }
+  .top-bar small { opacity: 0.65; font-size: 0.78rem; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: 0 32px;
+  }
+  .tab-btn {
+    padding: 14px 22px;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn:hover { color: var(--accent); }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── SECTIONS ── */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── FORM ELEMENTS ── */
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--accent2);
+    background: #fff;
+  }
+  .field textarea { resize: vertical; min-height: 70px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 7px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #3a5f99; }
+  .btn-success { background: var(--correct); color: #fff; }
+  .btn-success:hover { background: #256b49; }
+  .btn-warn { background: var(--warn); color: #fff; }
+  .btn-sm { padding: 7px 14px; font-size: 0.82rem; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+  .btn-ghost:hover { border-color: var(--accent2); color: var(--accent); }
+  .btn-danger-sm { background: #fdecea; color: var(--wrong); border: 1px solid #f5c6c2; }
+  .btn-danger-sm:hover { background: #fbd6d3; }
+
+  /* ── QUESTION CARDS ── */
+  .q-card {
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 20px;
+    margin-bottom: 14px;
+    background: var(--surface);
+    transition: box-shadow 0.2s;
+  }
+  .q-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .q-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .q-badge {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .q-text-preview {
+    font-weight: 500;
+    font-size: 0.95rem;
+    flex: 1;
+    color: var(--text);
+  }
+  .q-actions { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; }
+
+  /* ── OPTIONS IN QUESTION ── */
+  .op-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .op-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .op-item input[type="text"] {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.9rem;
+    color: var(--text);
+    padding: 0;
+  }
+  .op-item input[type="checkbox"], .op-item input[type="radio"] { flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--correct); cursor: pointer; }
+  .op-item.is-correct { background: #edf7f1; border-color: #b3dfc7; }
+  .op-remove { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 1rem; padding: 2px 6px; border-radius: 4px; }
+  .op-remove:hover { background: #fdecea; color: var(--wrong); }
+
+  /* ── CODE OUTPUT ── */
+  .code-block {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    padding: 20px;
+    border-radius: 9px;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.6;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  /* ── FEEDBACK SECTION ── */
+  .feedback-box {
+    background: #fff8ed;
+    border: 1px solid #f0d59e;
+    border-radius: 9px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .feedback-box h3 { font-size: 1rem; margin-bottom: 8px; color: var(--warn); }
+  .code-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin: 10px 0;
+  }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--accent);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+
+  .tip {
+    font-size: 0.82rem;
+    color: var(--text2);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  .tip strong { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .row2 { grid-template-columns: 1fr; }
+    .tabs { padding: 0 12px; }
+    .container { padding: 20px 16px; }
+    .top-bar { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <h1>Panel Docente — Configurador de Examen</h1>
+    <small>Use las pestañas para configurar, cargar preguntas y habilitar feedback</small>
+  </div>
+  <button class="btn" style="background:rgba(255,255,255,0.15);color:#fff" onclick="window.open('examen.html','_blank')">
+    👁 Ver examen
+  </button>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('tab-config')">⚙ Configuración</button>
+  <button class="tab-btn" onclick="switchTab('tab-preguntas')">📝 Preguntas</button>
+  <button class="tab-btn" onclick="switchTab('tab-generar')">💾 Generar config.js</button>
+  <button class="tab-btn" onclick="switchTab('tab-feedback')">📊 Feedback</button>
+  <button class="tab-btn" onclick="switchTab('tab-sheets')">🔧 Apps Script</button>
+</div>
+
+<div class="container">
+
+  <!-- ═══ TAB: CONFIGURACIÓN ═══ -->
+  <div class="tab-panel active" id="tab-config">
+    <div class="section">
+      <div class="section-title">Datos del examen</div>
+      <div class="field">
+        <label>Título del examen</label>
+        <input id="cfg-titulo" type="text" value="Derecho Comercial — Parcialito N° 1" placeholder="Ej: Contratos — Parcialito 2">
+      </div>
+      <div class="field">
+        <label>Subtítulo / Cátedra</label>
+        <input id="cfg-subtitulo" type="text" value="Cátedra Favier Dubois · UBA Derecho" placeholder="Ej: Prof. Romei · Universidad Kennedy">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Tiempo total (minutos)</label>
+          <input id="cfg-timer" type="number" value="30" min="5" max="180">
+        </div>
+        <div class="field">
+          <label>URL Google Apps Script</label>
+          <input id="cfg-url" type="url" value="URL_DE_TU_GOOGLE_APPS_SCRIPT" placeholder="https://script.google.com/...">
+        </div>
+      </div>
+      <p class="tip">ℹ️ Consulte la pestaña <strong>Apps Script</strong> para obtener la URL de su planilla de Google Sheets.</p>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: PREGUNTAS ═══ -->
+  <div class="tab-panel" id="tab-preguntas">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <strong id="q-count-label">0 preguntas</strong>
+        <span style="color:var(--text2);font-size:0.85rem;margin-left:8px" id="pts-count-label">0 puntos totales</span>
+      </div>
+      <button class="btn btn-primary" onclick="addQuestion()">+ Agregar pregunta</button>
+    </div>
+    <div id="questions-container"></div>
+    <div id="no-questions" style="text-align:center;color:var(--text2);padding:48px;border:2px dashed var(--border);border-radius:10px">
+      <div style="font-size:2.5rem;margin-bottom:10px">📋</div>
+      <div>No hay preguntas aún. Haga clic en "Agregar pregunta" para comenzar.</div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: GENERAR ═══ -->
+  <div class="tab-panel" id="tab-generar">
+    <div class="section">
+      <div class="section-title">Generar config.js</div>
+      <p style="margin-bottom:16px;color:var(--text2);font-size:0.9rem">
+        Haga clic en el botón para generar el archivo <strong>config.js</strong> con toda la configuración actual.
+        Luego cópielo y reemplace el archivo en su repositorio de GitHub.
+      </p>
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="generateConfig()">⚙ Generar config.js</button>
+        <button class="btn btn-ghost" onclick="copyConfig()">📋 Copiar al portapapeles</button>
+        <button class="btn btn-success" onclick="downloadConfig()">⬇ Descargar config.js</button>
+      </div>
+      <div class="code-block" id="config-output">// Haga clic en "Generar config.js" para ver el resultado aquí</div>
+    </div>
+    <div class="section">
+      <div class="section-title">Instrucciones de publicación</div>
+      <ol style="padding-left:20px;line-height:2;font-size:0.9rem;color:var(--text2)">
+        <li>Genere y descargue el <code>config.js</code></li>
+        <li>Abra su repositorio en GitHub</li>
+        <li>Vaya a <strong>config.js</strong> → clic en ✏ Editar (o arrastre el archivo nuevo)</li>
+        <li>Pegue el contenido generado y haga commit</li>
+        <li>GitHub Pages publicará los cambios en ~30 segundos</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: FEEDBACK ═══ -->
+  <div class="tab-panel" id="tab-feedback">
+    <div class="feedback-box">
+      <h3>⚠ Antes de habilitar el feedback</h3>
+      <p style="font-size:0.88rem;color:#7a5c20">
+        El código de feedback permite que los alumnos vean sus resultados. Genérelo
+        solo cuando desee que los alumnos puedan acceder a la corrección. Una vez
+        publicado en config.js, todos los alumnos podrán ver sus notas ingresando el código y su DNI.
+      </p>
+    </div>
+    <div class="section">
+      <div class="section-title">Código de acceso a resultados</div>
+      <div class="field">
+        <label>Código actual en config.js</label>
+        <div class="code-display" id="current-feedback-code">— sin código —</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-warn" onclick="generateFeedbackCode()">🔑 Generar nuevo código</button>
+        <button class="btn btn-ghost" onclick="clearFeedbackCode()">✕ Borrar código</button>
+      </div>
+      <p class="tip" style="margin-top:14px">
+        Después de generar el código, vaya a la pestaña <strong>Generar config.js</strong>,
+        genere y descargue el archivo, y publíquelo en GitHub.
+        Luego comparta el código con sus alumnos para que accedan a sus resultados en <strong>examen.html → Ver resultados</strong>.
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: APPS SCRIPT ═══ -->
+  <div class="tab-panel" id="tab-sheets">
+    <div class="section">
+      <div class="section-title">Configurar Google Sheets + Apps Script</div>
+      <ol style="padding-left:18px;line-height:2.2;font-size:0.9rem;color:var(--text2)">
+        <li>Abra <a href="https://sheets.google.com" target="_blank" style="color:var(--accent2)">Google Sheets</a> y cree una planilla nueva.</li>
+        <li>En la planilla, haga clic en <strong>Extensiones → Apps Script</strong>.</li>
+        <li>Borre el contenido por defecto y <strong>pegue el código de abajo</strong>.</li>
+        <li>Haga clic en <strong>Guardar</strong> (ícono de disquete).</li>
+        <li>Haga clic en <strong>Implementar → Nueva implementación</strong>.</li>
+        <li>Tipo: <strong>Aplicación web</strong> · Ejecutar como: <strong>Yo</strong> · Quién tiene acceso: <strong>Cualquier usuario</strong>.</li>
+        <li>Haga clic en <strong>Implementar</strong> y copie la URL que aparece.</li>
+        <li>Pegue esa URL en el campo <em>URL Google Apps Script</em> de la pestaña Configuración.</li>
+      </ol>
+      <div style="margin-top:20px">
+        <button class="btn btn-ghost btn-sm" onclick="copyScript()">📋 Copiar código Apps Script</button>
+      </div>
+      <div class="code-block" style="margin-top:14px" id="apps-script-code"></div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<div id="toast"></div>
+
+<script>
+// ════════════ STATE ════════════
+let questions = []; // array of question objects
+let feedbackCode = '';
+
+const APPS_SCRIPT = `function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // ── Hoja RESPUESTAS ──
+    let sheet = ss.getSheetByName('Respuestas');
+    if (!sheet) {
+      sheet = ss.insertSheet('Respuestas');
+      sheet.appendRow(['Fecha','Nombre','DNI','Examen','Puntaje','Máximo','Tiempo (seg)','Detalle JSON']);
+      sheet.setFrozenRows(1);
+    }
+    sheet.appendRow([
+      data.fecha,
+      data.nombre,
+      data.dni,
+      data.examen,
+      data.puntajeTotal,
+      data.puntajeMaximo,
+      data.tiempoUsadoSeg,
+      data.detalleJSON
+    ]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  try {
+    const action = e.parameter.action;
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    if (action === 'getFeedback') {
+      const dni    = e.parameter.dni;
+      const examen = e.parameter.examen;
+      const sheet  = ss.getSheetByName('Respuestas');
+      if (!sheet) return json({ error: 'Sin datos' });
+
+      const rows = sheet.getDataRange().getValues();
+      // Find last submission matching DNI + examen
+      let found = null;
+      for (let i = rows.length - 1; i >= 1; i--) {
+        if (String(rows[i][2]) === String(dni) && rows[i][3] === examen) {
+          found = {
+            fecha: rows[i][0],
+            nombre: rows[i][1],
+            dni: rows[i][2],
+            examen: rows[i][3],
+            puntajeTotal: rows[i][4],
+            puntajeMaximo: rows[i][5],
+            detalleJSON: rows[i][7]
+          };
+          break;
+        }
+      }
+      if (!found) return json({ error: 'No se encontraron resultados para ese DNI' });
+      return json(found);
+    }
+
+    return json({ error: 'Acción no reconocida' });
+  } catch(err) {
+    return json({ error: err.toString() });
+  }
+}
+
+function json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+document.getElementById('apps-script-code').textContent = APPS_SCRIPT;
+
+// ════════════ TABS ════════════
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'tab-preguntas') renderQuestions();
+  if (id === 'tab-feedback') syncFeedbackDisplay();
+}
+
+// ════════════ QUESTIONS ════════════
+function addQuestion() {
+  questions.push({
+    tipo: 'simple',
+    puntaje: 2,
+    pregunta: '',
+    opciones: [
+      { texto: '', correcta: false },
+      { texto: '', correcta: false },
+      { texto: '', correcta: false },
+      { texto: '', correcta: false }
+    ]
+  });
+  renderQuestions();
+  // Scroll to last
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.q-card');
+    if (cards.length) cards[cards.length-1].scrollIntoView({ behavior:'smooth' });
+  }, 100);
+}
+
+function renderQuestions() {
+  const container = document.getElementById('questions-container');
+  const noQ = document.getElementById('no-questions');
+  container.innerHTML = '';
+  noQ.style.display = questions.length ? 'none' : 'block';
+
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.innerHTML = buildQuestionHTML(q, qi);
+    container.appendChild(card);
+  });
+  updateCounts();
+}
+
+function buildQuestionHTML(q, qi) {
+  const isMulti = q.tipo === 'multiple';
+  const inputType = isMulti ? 'checkbox' : 'radio';
+
+  let optHtml = '';
+  q.opciones.forEach((op, oi) => {
+    optHtml += `
+      <li class="op-item ${op.correcta ? 'is-correct' : ''}">
+        <input type="${inputType}" name="correct-${qi}" ${op.correcta ? 'checked' : ''}
+               onchange="toggleCorrect(${qi},${oi},this)">
+        <input type="text" value="${escHtml(op.texto)}" placeholder="Opción ${oi+1}"
+               oninput="updateOptionText(${qi},${oi},this.value)">
+        ${q.opciones.length > 2 ? `<button class="op-remove" onclick="removeOption(${qi},${oi})">✕</button>` : ''}
+      </li>`;
+  });
+
+  return `
+    <div class="q-card-header">
+      <span class="q-badge">P ${qi+1}</span>
+      <div class="q-text-preview">${q.pregunta ? escHtml(q.pregunta.substring(0,80)) + (q.pregunta.length>80?'…':'') : '<span style="color:var(--text2)">Sin texto aún</span>'}</div>
+      <div class="q-actions">
+        ${qi > 0 ? `<button class="btn btn-ghost btn-sm" onclick="moveQ(${qi},-1)">↑</button>` : ''}
+        ${qi < questions.length-1 ? `<button class="btn btn-ghost btn-sm" onclick="moveQ(${qi},1)">↓</button>` : ''}
+        <button class="btn btn-danger-sm btn-sm" onclick="removeQuestion(${qi})">🗑</button>
+      </div>
+    </div>
+    <div class="row2" style="margin-bottom:14px">
+      <div class="field" style="margin:0">
+        <label>Tipo</label>
+        <select onchange="updateQTipo(${qi},this.value)">
+          <option value="simple" ${q.tipo==='simple'?'selected':''}>Una respuesta correcta</option>
+          <option value="multiple" ${q.tipo==='multiple'?'selected':''}>Varias respuestas correctas</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0">
+        <label>Puntaje</label>
+        <input type="number" min="0.5" step="0.5" value="${q.puntaje}" onchange="updateQPuntaje(${qi},this.value)">
+      </div>
+    </div>
+    <div class="field">
+      <label>Enunciado de la pregunta</label>
+      <textarea oninput="updateQText(${qi},this.value)" placeholder="Escriba aquí el enunciado...">${escHtml(q.pregunta)}</textarea>
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:0.78rem;font-weight:500;color:var(--text2);letter-spacing:0.04em;display:block;margin-bottom:8px">
+        OPCIONES — ${isMulti ? 'Marque todas las correctas' : 'Marque la única correcta'}
+      </label>
+      <ul class="op-list">${optHtml}</ul>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="addOption(${qi})" style="margin-top:6px">+ Agregar opción</button>
+  `;
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function updateQText(qi, val) {
+  questions[qi].pregunta = val;
+  // Update preview
+  const cards = document.querySelectorAll('.q-card');
+  const preview = cards[qi].querySelector('.q-text-preview');
+  if (preview) preview.innerHTML = val ? escHtml(val.substring(0,80))+(val.length>80?'…':'') : '<span style="color:var(--text2)">Sin texto aún</span>';
+  updateCounts();
+}
+
+function updateQTipo(qi, val) {
+  questions[qi].tipo = val;
+  // Reset correctas to avoid inconsistency
+  questions[qi].opciones.forEach(o => o.correcta = false);
+  renderQuestions();
+}
+
+function updateQPuntaje(qi, val) {
+  questions[qi].puntaje = parseFloat(val) || 1;
+  updateCounts();
+}
+
+function updateOptionText(qi, oi, val) { questions[qi].opciones[oi].texto = val; }
+
+function toggleCorrect(qi, oi, el) {
+  const q = questions[qi];
+  if (q.tipo === 'simple') {
+    // Radio: uncheck all others
+    q.opciones.forEach((o, i) => o.correcta = (i === oi));
+  } else {
+    q.opciones[oi].correcta = el.checked;
+  }
+  // Update visual
+  const cards = document.querySelectorAll('.q-card');
+  const items = cards[qi].querySelectorAll('.op-item');
+  items.forEach((li, i) => {
+    li.classList.toggle('is-correct', q.opciones[i].correcta);
+  });
+}
+
+function addOption(qi) {
+  questions[qi].opciones.push({ texto: '', correcta: false });
+  renderQuestions();
+}
+
+function removeOption(qi, oi) {
+  if (questions[qi].opciones.length <= 2) { showToast('Mínimo 2 opciones'); return; }
+  questions[qi].opciones.splice(oi, 1);
+  renderQuestions();
+}
+
+function removeQuestion(qi) {
+  if (!confirm(`¿Eliminar la pregunta ${qi+1}?`)) return;
+  questions.splice(qi, 1);
+  renderQuestions();
+}
+
+function moveQ(qi, dir) {
+  const to = qi + dir;
+  if (to < 0 || to >= questions.length) return;
+  [questions[qi], questions[to]] = [questions[to], questions[qi]];
+  renderQuestions();
+}
+
+function updateCounts() {
+  document.getElementById('q-count-label').textContent = `${questions.length} pregunta${questions.length!==1?'s':''}`;
+  const total = questions.reduce((s,q) => s + (parseFloat(q.puntaje)||0), 0);
+  document.getElementById('pts-count-label').textContent = `${total} punto${total!==1?'s':''} totales`;
+}
+
+// ════════════ GENERATE CONFIG ════════════
+function getConfigObj() {
+  return {
+    titulo: document.getElementById('cfg-titulo').value.trim() || 'Examen',
+    subtitulo: document.getElementById('cfg-subtitulo').value.trim() || '',
+    timerMinutos: parseInt(document.getElementById('cfg-timer').value) || 30,
+    sheetsWebhookUrl: document.getElementById('cfg-url').value.trim() || 'URL_DE_TU_GOOGLE_APPS_SCRIPT',
+    feedbackCode: feedbackCode,
+    preguntas: questions
+  };
+}
+
+function generateConfig() {
+  const cfg = getConfigObj();
+  const js = buildConfigJS(cfg);
+  document.getElementById('config-output').textContent = js;
+  showToast('✅ config.js generado');
+}
+
+function buildConfigJS(cfg) {
+  const q = cfg.preguntas.map(q => {
+    const opts = q.opciones.map(o =>
+      `        { texto: ${JSON.stringify(o.texto)}, correcta: ${o.correcta} }`
+    ).join(',\n');
+    return `    {\n      tipo: ${JSON.stringify(q.tipo)},\n      puntaje: ${q.puntaje},\n      pregunta: ${JSON.stringify(q.pregunta)},\n      opciones: [\n${opts}\n      ]\n    }`;
+  }).join(',\n');
+
+  return `// ════════════════════════════════════════════
+//  config.js — generado por Panel Docente
+//  ${new Date().toLocaleString('es-AR')}
+// ════════════════════════════════════════════
+
+const EXAM_CONFIG = {
+  titulo:    ${JSON.stringify(cfg.titulo)},
+  subtitulo: ${JSON.stringify(cfg.subtitulo)},
+  timerMinutos: ${cfg.timerMinutos},
+  sheetsWebhookUrl: ${JSON.stringify(cfg.sheetsWebhookUrl)},
+  feedbackCode: ${JSON.stringify(cfg.feedbackCode)},
+  preguntas: [
+${q}
+  ]
+};`;
+}
+
+function copyConfig() {
+  const text = document.getElementById('config-output').textContent;
+  if (text.startsWith('//') === false) { showToast('Primero genere el config.js'); return; }
+  navigator.clipboard.writeText(text).then(() => showToast('✅ Copiado al portapapeles'));
+}
+
+function downloadConfig() {
+  generateConfig();
+  const text = document.getElementById('config-output').textContent;
+  const blob = new Blob([text], { type: 'application/javascript' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'config.js';
+  a.click();
+  showToast('⬇ Descargando config.js...');
+}
+
+// ════════════ FEEDBACK CODE ════════════
+function generateFeedbackCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  feedbackCode = Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  syncFeedbackDisplay();
+  showToast('🔑 Código generado. Recuerde generar y publicar config.js.');
+}
+
+function clearFeedbackCode() {
+  feedbackCode = '';
+  syncFeedbackDisplay();
+  showToast('Código borrado. Recuerde generar y publicar config.js.');
+}
+
+function syncFeedbackDisplay() {
+  document.getElementById('current-feedback-code').textContent = feedbackCode || '— sin código —';
+}
+
+// ════════════ APPS SCRIPT ════════════
+function copyScript() {
+  navigator.clipboard.writeText(APPS_SCRIPT).then(() => showToast('✅ Código copiado'));
+}
+
+// ════════════ UTILS ════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── Prefill from config.js if present ──
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof EXAM_CONFIG !== 'undefined') {
+    document.getElementById('cfg-titulo').value    = EXAM_CONFIG.titulo || '';
+    document.getElementById('cfg-subtitulo').value = EXAM_CONFIG.subtitulo || '';
+    document.getElementById('cfg-timer').value     = EXAM_CONFIG.timerMinutos || 30;
+    document.getElementById('cfg-url').value       = EXAM_CONFIG.sheetsWebhookUrl || '';
+    feedbackCode = EXAM_CONFIG.feedbackCode || '';
+    questions = JSON.parse(JSON.stringify(EXAM_CONFIG.preguntas || []));
+    syncFeedbackDisplay();
+    renderQuestions();
+  }
+});
+</script>
+
+<script src="config.js"></script>
+</body>
+</html>
