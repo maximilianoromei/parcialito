@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a22;
+    --surface2: #22222e;
+    --border: #2e2e3e;
+    --accent: #c8a96e;
+    --accent2: #7c6af0;
+    --text: #e8e6f0;
+    --text2: #9997b0;
+    --correct: #4caf88;
+    --correct-bg: rgba(76,175,136,0.12);
+    --correct-border: rgba(76,175,136,0.3);
+    --wrong: #e05c6a;
+    --wrong-bg: rgba(224,92,106,0.10);
+    --wrong-border: rgba(224,92,106,0.25);
+    --neutral: rgba(255,255,255,0.04);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,106,240,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .wrap { width: 100%; max-width: 640px; animation: fadeUp 0.4s ease; }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .header { text-align: center; margin-bottom: 32px; }
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .header p { color: var(--text2); font-size: 0.9rem; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 14px;
+  }
+
+  /* ── CLOSED ── */
+  .closed-icon { font-size: 3rem; text-align: center; margin-bottom: 16px; }
+  .closed-msg  { text-align: center; }
+  .closed-msg h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+  .closed-msg p { color: var(--text2); font-size: 0.9rem; line-height: 1.6; }
+
+  /* ── DNI FORM ── */
+  .field { margin-bottom: 20px; }
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 8px;
+  }
+  .field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 13px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus { border-color: var(--accent2); }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-primary { background: var(--accent); color: #111; }
+  .btn-primary:hover { background: #d9bc85; transform: translateY(-1px); }
+
+  /* ── RESULTS ── */
+  .score-header {
+    text-align: center;
+    padding: 28px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 14px;
+  }
+  .student-name { font-size: 1.15rem; font-weight: 600; margin-bottom: 4px; }
+  .exam-name    { color: var(--text2); font-size: 0.85rem; margin-bottom: 16px; }
+  .score-badge  {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #111;
+    font-weight: 700;
+    font-size: 1.8rem;
+    padding: 12px 32px;
+    border-radius: 40px;
+    margin-bottom: 8px;
+  }
+  .score-sub { color: var(--text2); font-size: 0.82rem; }
+
+  .q-block { margin-bottom: 14px; }
+  .q-block .card { padding: 22px 24px; }
+  .q-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .q-label.correct { color: var(--correct); }
+  .q-label.wrong   { color: var(--wrong); }
+  .q-label .pts    { float: right; font-weight: 600; }
+
+  .q-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .op {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+  }
+  .op.correct        { background: var(--correct-bg); border-color: var(--correct-border); color: var(--correct); }
+  .op.wrong-selected { background: var(--wrong-bg);   border-color: var(--wrong-border);   color: var(--wrong); }
+  .op.neutral        { color: var(--text2); }
+  .op-icon           { flex-shrink: 0; width: 18px; }
+  .op-text           { flex: 1; line-height: 1.4; }
+  .op-tag            { font-size: 0.72rem; opacity: 0.8; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+
+  #toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 20px; border-radius: 30px;
+    font-size: 0.85rem; opacity: 0; transition: all 0.3s; z-index: 99;
+    pointer-events: none; white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 480px) { .card { padding: 20px 16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1 id="page-title">Resultados</h1>
+    <p id="page-subtitle"></p>
+  </div>
+
+  <!-- CERRADO -->
+  <div id="view-closed" class="card" style="display:none">
+    <div class="closed-icon">🔒</div>
+    <div class="closed-msg">
+      <h2>Resultados no disponibles</h2>
+      <p>El profesor aún no habilitó la visualización de resultados.<br>Consulte cuando le sea indicado.</p>
+    </div>
+  </div>
+
+  <!-- FORMULARIO DNI -->
+  <div id="view-form" class="card" style="display:none">
+    <div class="field">
+      <label>Ingrese su DNI para ver sus resultados</label>
+      <input type="text" id="inp-dni" placeholder="Ej: 38123456" inputmode="numeric" maxlength="8">
+    </div>
+    <button class="btn btn-primary" onclick="buscarResultados()">Ver mis resultados →</button>
+  </div>
+
+  <!-- RESULTADOS -->
+  <div id="view-results" style="display:none">
+    <div class="score-header">
+      <div class="student-name" id="res-nombre"></div>
+      <div class="exam-name"    id="res-examen"></div>
+      <div class="score-badge"  id="res-score"></div>
+      <div class="score-sub"    id="res-sub"></div>
+    </div>
+    <div id="res-questions"></div>
+    <div style="text-align:center;margin-top:20px">
+      <button class="btn" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);max-width:200px;margin:0 auto" onclick="resetForm()">← Consultar otro DNI</button>
+    </div>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+function init() {
+  if (typeof EXAM_CONFIG === 'undefined') {
+    document.getElementById('page-title').textContent = 'Error';
+    document.getElementById('page-subtitle').textContent = 'No se pudo cargar la configuración del examen.';
+    return;
+  }
+
+  document.getElementById('page-title').textContent = 'Resultados';
+  document.getElementById('page-subtitle').textContent = EXAM_CONFIG.titulo || '';
+
+  if (!EXAM_CONFIG.feedbackHabilitado) {
+    document.getElementById('view-closed').style.display = 'block';
+  } else {
+    document.getElementById('view-form').style.display = 'block';
+  }
+}
+
+function buscarResultados() {
+  const dni = document.getElementById('inp-dni').value.trim();
+  if (!dni || !/^\d{7,8}$/.test(dni)) { toast('Ingrese un DNI válido'); return; }
+
+  const url = EXAM_CONFIG.sheetsWebhookUrl;
+  if (!url || url === 'URL_DE_TU_GOOGLE_APPS_SCRIPT') { toast('URL de Sheets no configurada'); return; }
+
+  fetch(`${url}?action=getFeedback&dni=${encodeURIComponent(dni)}&examen=${encodeURIComponent(EXAM_CONFIG.titulo || '')}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data || data.error) { toast(data?.error || 'No se encontraron resultados para ese DNI'); return; }
+      mostrarResultados(data);
+    })
+    .catch(() => toast('Error al conectar. Intente nuevamente.'));
+}
+
+function mostrarResultados(data) {
+  document.getElementById('view-form').style.display = 'none';
+  document.getElementById('view-results').style.display = 'block';
+
+  document.getElementById('res-nombre').textContent = data.nombre;
+  document.getElementById('res-examen').textContent = data.examen;
+  document.getElementById('res-score').textContent  = `${data.puntajeTotal} / ${data.puntajeMaximo} pts`;
+  document.getElementById('res-sub').textContent    = `Entregado el ${data.fecha}`;
+
+  const detalle = typeof data.detalleJSON === 'string' ? JSON.parse(data.detalleJSON) : data.detalleJSON;
+  const container = document.getElementById('res-questions');
+  container.innerHTML = '';
+
+  Object.entries(detalle).forEach(([qi, r], idx) => {
+    const correcta = r.correcta;
+    const labelClass = correcta ? 'correct' : 'wrong';
+    const labelTxt   = correcta ? '✓ Correcta' : '✗ Incorrecta';
+    const ptsObt = correcta ? r.puntaje : 0;
+
+    // Build options
+    const cfgQ = (typeof EXAM_CONFIG !== 'undefined' && EXAM_CONFIG.preguntas)
+      ? EXAM_CONFIG.preguntas[parseInt(qi)] : null;
+
+    let opsHtml = '';
+    if (cfgQ) {
+      cfgQ.opciones.forEach(op => {
+        const seleccionada = (r.seleccionadas || []).includes(op.texto);
+        let cls = 'neutral', icon = '·', tag = '';
+        if (op.correcta && seleccionada)  { cls = 'correct';        icon = '✓'; tag = 'Correcta · elegida'; }
+        else if (op.correcta && !seleccionada) { cls = 'correct';   icon = '✓'; tag = 'Correcta · no elegida'; }
+        else if (!op.correcta && seleccionada) { cls = 'wrong-selected'; icon = '✗'; tag = 'Incorrecta · elegida'; }
+        opsHtml += `<div class="op ${cls}">
+          <span class="op-icon">${icon}</span>
+          <span class="op-text">${esc(op.texto)}</span>
+          ${tag ? `<span class="op-tag">${tag}</span>` : ''}
+        </div>`;
+      });
+    } else {
+      // Fallback: solo mostrar lo que contestó
+      (r.seleccionadas || []).forEach(s => {
+        opsHtml += `<div class="op neutral"><span class="op-icon">·</span><span class="op-text">${esc(s)}</span></div>`;
+      });
+    }
+
+    container.innerHTML += `
+      <div class="q-block">
+        <div class="card">
+          <div class="q-label ${labelClass}">
+            Pregunta ${idx+1} &nbsp;${labelTxt}
+            <span class="pts">${ptsObt} / ${r.puntajeMax} pts</span>
+          </div>
+          <div class="q-text">${esc(r.pregunta)}</div>
+          ${opsHtml}
+        </div>
+      </div>`;
+  });
+}
+
+function resetForm() {
+  document.getElementById('view-results').style.display = 'none';
+  document.getElementById('view-form').style.display = 'block';
+  document.getElementById('inp-dni').value = '';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+<script src="config.js"></script>
+</body>
+</html>

@@ -367,28 +367,23 @@
 
   <!-- ═══ TAB: FEEDBACK ═══ -->
   <div class="tab-panel" id="tab-feedback">
-    <div class="feedback-box">
-      <h3>⚠ Antes de habilitar el feedback</h3>
-      <p style="font-size:0.88rem;color:#7a5c20">
-        El código de feedback permite que los alumnos vean sus resultados. Genérelo
-        solo cuando desee que los alumnos puedan acceder a la corrección. Una vez
-        publicado en config.js, todos los alumnos podrán ver sus notas ingresando el código y su DNI.
-      </p>
-    </div>
     <div class="section">
-      <div class="section-title">Código de acceso a resultados</div>
-      <div class="field">
-        <label>Código actual en config.js</label>
-        <div class="code-display" id="current-feedback-code">— sin código —</div>
+      <div class="section-title">Habilitar resultados para los alumnos</div>
+      <p style="font-size:0.9rem;color:var(--text2);margin-bottom:20px;line-height:1.6">
+        Cuando habilite los resultados, los alumnos podrán ingresar a
+        <strong>resultados.html</strong> con su DNI y ver su corrección completa.
+        Mientras esté deshabilitado, verán un mensaje de "no disponible".
+      </p>
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;flex-wrap:wrap">
+        <div id="fb-status-badge" style="padding:10px 20px;border-radius:30px;font-weight:600;font-size:0.9rem"></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-success" onclick="setFeedback(true)">✅ Habilitar resultados</button>
+          <button class="btn btn-ghost" onclick="setFeedback(false)">🔒 Deshabilitar</button>
+        </div>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-warn" onclick="generateFeedbackCode()">🔑 Generar nuevo código</button>
-        <button class="btn btn-ghost" onclick="clearFeedbackCode()">✕ Borrar código</button>
-      </div>
-      <p class="tip" style="margin-top:14px">
-        Después de generar el código, vaya a la pestaña <strong>Generar config.js</strong>,
-        genere y descargue el archivo, y publíquelo en GitHub.
-        Luego comparta el código con sus alumnos para que accedan a sus resultados en <strong>examen.html → Ver resultados</strong>.
+      <p class="tip">
+        Después de cambiar el estado, vaya a <strong>Generar config.js</strong> → Descargar → subir a GitHub.<br>
+        Comparta con los alumnos el link: <strong>resultados.html</strong>
       </p>
     </div>
   </div>
@@ -420,8 +415,8 @@
 
 <script>
 // ════════════ STATE ════════════
-let questions = []; // array of question objects
-let feedbackCode = '';
+let questions = [];
+let feedbackHabilitado = false;
 
 const APPS_SCRIPT = `function doPost(e) {
   try {
@@ -681,7 +676,7 @@ function getConfigObj() {
     subtitulo: document.getElementById('cfg-subtitulo').value.trim() || '',
     timerMinutos: parseInt(document.getElementById('cfg-timer').value) || 30,
     sheetsWebhookUrl: document.getElementById('cfg-url').value.trim() || 'URL_DE_TU_GOOGLE_APPS_SCRIPT',
-    feedbackCode: feedbackCode,
+    feedbackHabilitado: feedbackHabilitado,
     preguntas: questions
   };
 }
@@ -711,7 +706,7 @@ const EXAM_CONFIG = {
   subtitulo: ${JSON.stringify(cfg.subtitulo)},
   timerMinutos: ${cfg.timerMinutos},
   sheetsWebhookUrl: ${JSON.stringify(cfg.sheetsWebhookUrl)},
-  feedbackCode: ${JSON.stringify(cfg.feedbackCode)},
+  feedbackHabilitado: ${cfg.feedbackHabilitado},
   preguntas: [
 ${q}
   ]
@@ -735,22 +730,25 @@ function downloadConfig() {
   showToast('⬇ Descargando config.js...');
 }
 
-// ════════════ FEEDBACK CODE ════════════
-function generateFeedbackCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  feedbackCode = Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
-  syncFeedbackDisplay();
-  showToast('🔑 Código generado. Recuerde generar y publicar config.js.');
-}
+// ════════════ FEEDBACK TOGGLE ════════════
+let feedbackHabilitado = false;
 
-function clearFeedbackCode() {
-  feedbackCode = '';
+function setFeedback(val) {
+  feedbackHabilitado = val;
   syncFeedbackDisplay();
-  showToast('Código borrado. Recuerde generar y publicar config.js.');
+  showToast(val ? '✅ Habilitado. Genere y suba config.js.' : '🔒 Deshabilitado. Genere y suba config.js.');
 }
 
 function syncFeedbackDisplay() {
-  document.getElementById('current-feedback-code').textContent = feedbackCode || '— sin código —';
+  const badge = document.getElementById('fb-status-badge');
+  if (!badge) return;
+  if (feedbackHabilitado) {
+    badge.textContent = '✅ Resultados HABILITADOS';
+    badge.style.cssText += 'background:#edf7f1;color:#2e7d57;border:1px solid #b3dfc7';
+  } else {
+    badge.textContent = '🔒 Resultados DESHABILITADOS';
+    badge.style.cssText += 'background:#fdecea;color:#c0392b;border:1px solid #f5c6c2';
+  }
 }
 
 // ════════════ APPS SCRIPT ════════════
@@ -773,7 +771,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cfg-subtitulo').value = EXAM_CONFIG.subtitulo || '';
     document.getElementById('cfg-timer').value     = EXAM_CONFIG.timerMinutos || 30;
     document.getElementById('cfg-url').value       = EXAM_CONFIG.sheetsWebhookUrl || '';
-    feedbackCode = EXAM_CONFIG.feedbackCode || '';
+    feedbackHabilitado = EXAM_CONFIG.feedbackHabilitado || false;
     questions = JSON.parse(JSON.stringify(EXAM_CONFIG.preguntas || []));
     syncFeedbackDisplay();
     renderQuestions();
