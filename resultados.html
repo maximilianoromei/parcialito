@@ -150,8 +150,9 @@
     text-transform: uppercase;
     margin-bottom: 8px;
   }
-  .q-label.correct { color: var(--correct); }
-  .q-label.wrong   { color: var(--wrong); }
+  .q-label.correct  { color: var(--correct); }
+  .q-label.wrong    { color: var(--wrong); }
+  .q-label.partial  { color: var(--warn); }
   .q-label .pts    { float: right; font-weight: 600; }
 
   .q-text {
@@ -165,18 +166,37 @@
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 11px 14px;
     border-radius: 8px;
     margin-bottom: 6px;
     font-size: 0.9rem;
     border: 1px solid transparent;
   }
-  .op.correct        { background: var(--correct-bg); border-color: var(--correct-border); color: var(--correct); }
-  .op.wrong-selected { background: var(--wrong-bg);   border-color: var(--wrong-border);   color: var(--wrong); }
-  .op.neutral        { color: var(--text2); }
-  .op-icon           { flex-shrink: 0; width: 18px; }
-  .op-text           { flex: 1; line-height: 1.4; }
-  .op-tag            { font-size: 0.72rem; opacity: 0.8; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+  /* Eligió y era correcta — verde sólido */
+  .op.hit       { background: var(--correct-bg); border-color: var(--correct-border); color: var(--correct); font-weight: 600; }
+  /* No la eligió pero era correcta — verde suave, borde punteado */
+  .op.missed    { background: rgba(76,175,136,0.05); border: 1.5px dashed rgba(76,175,136,0.4); color: var(--correct); opacity: 0.75; }
+  /* La eligió pero era incorrecta — rojo */
+  .op.mistake   { background: var(--wrong-bg); border-color: var(--wrong-border); color: var(--wrong); font-weight: 600; }
+  /* No la eligió y era incorrecta — gris, sin destacar */
+  .op.ignored   { color: var(--text2); opacity: 0.5; }
+  .op-icon      { flex-shrink: 0; width: 20px; font-size: 1rem; }
+  .op-text      { flex: 1; line-height: 1.4; }
+  .op-tag       { font-size: 0.72rem; font-weight: 500; white-space: nowrap; flex-shrink: 0; margin-top: 2px; padding: 2px 8px; border-radius: 10px; }
+  .op.hit     .op-tag { background: rgba(76,175,136,0.2);  color: var(--correct); }
+  .op.missed  .op-tag { background: rgba(76,175,136,0.1);  color: var(--correct); }
+  .op.mistake .op-tag { background: rgba(224,92,106,0.15); color: var(--wrong); }
+  /* Mensaje resumen debajo del enunciado */
+  .q-summary {
+    font-size: 0.82rem;
+    padding: 8px 12px;
+    border-radius: 7px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .q-summary.ok      { background: rgba(76,175,136,0.1);  color: var(--correct); }
+  .q-summary.partial { background: rgba(200,169,110,0.12); color: #b8860b; }
+  .q-summary.bad     { background: var(--wrong-bg); color: var(--wrong); }
 
   #toast {
     position: fixed; bottom: 24px; left: 50%;
@@ -283,22 +303,69 @@ function mostrarResultados(data) {
 
   Object.entries(detalle).forEach(([qi, r], idx) => {
     const correcta = r.correcta;
-    const labelClass = correcta ? 'correct' : 'wrong';
-    const labelTxt   = correcta ? '✓ Correcta' : '✗ Incorrecta';
-    const ptsObt = correcta ? r.puntaje : 0;
+    const isMulti = (typeof EXAM_CONFIG !== 'undefined' && EXAM_CONFIG.preguntas && EXAM_CONFIG.preguntas[parseInt(qi)])
+      ? EXAM_CONFIG.preguntas[parseInt(qi)].tipo === 'multiple' : false;
+    const ptsObt = r.puntaje; // ya viene calculado con puntaje parcial desde examen.html
+    let labelClass, labelTxt;
+    if (isMulti) {
+      if (ptsObt === r.puntajeMax)      { labelClass = 'correct'; labelTxt = '✓ Correcta completa'; }
+      else if (ptsObt > 0)              { labelClass = 'partial'; labelTxt = `◑ Parcialmente correcta`; }
+      else                              { labelClass = 'wrong';   labelTxt = '✗ Incorrecta'; }
+    } else {
+      labelClass = correcta ? 'correct' : 'wrong';
+      labelTxt   = correcta ? '✓ Correcta' : '✗ Incorrecta';
+    }
 
     // Build options
     const cfgQ = (typeof EXAM_CONFIG !== 'undefined' && EXAM_CONFIG.preguntas)
       ? EXAM_CONFIG.preguntas[parseInt(qi)] : null;
 
     let opsHtml = '';
+    let summaryHtml = '';
+
     if (cfgQ) {
+      const seleccionadas = r.seleccionadas || [];
+      const correctasTexto = cfgQ.opciones.filter(o => o.correcta).map(o => o.texto);
+
+      // Construir resumen claro
+      const elegidas       = seleccionadas.length;
+      const acertadas      = seleccionadas.filter(s => correctasTexto.includes(s)).length;
+      const incorrectasMarcadas = seleccionadas.filter(s => !correctasTexto.includes(s)).length;
+      const perdidas       = correctasTexto.filter(s => !seleccionadas.includes(s)).length;
+
+      if (elegidas === 0) {
+        summaryHtml = `<div class="q-summary bad">No respondió esta pregunta.</div>`;
+      } else if (isMulti) {
+        if (ptsObt === r.puntajeMax) {
+          summaryHtml = `<div class="q-summary ok">✓ Marcó todas las opciones correctas.</div>`;
+        } else {
+          let msg = [];
+          if (acertadas > 0)            msg.push(`${acertadas} opción${acertadas>1?'es':''} correcta${acertadas>1?'s':''} elegida${acertadas>1?'s':''}`);
+          if (perdidas > 0)             msg.push(`${perdidas} correcta${perdidas>1?'s':''} sin marcar`);
+          if (incorrectasMarcadas > 0)  msg.push(`${incorrectasMarcadas} incorrecta${incorrectasMarcadas>1?'s':''} marcada${incorrectasMarcadas>1?'s':''}`);
+          const cls = ptsObt > 0 ? 'partial' : 'bad';
+          summaryHtml = `<div class="q-summary ${cls}">${msg.join(' · ')}</div>`;
+        }
+      } else {
+        if (ptsObt > 0) {
+          summaryHtml = `<div class="q-summary ok">✓ Respuesta correcta.</div>`;
+        } else {
+          summaryHtml = `<div class="q-summary bad">✗ Respuesta incorrecta.</div>`;
+        }
+      }
+
       cfgQ.opciones.forEach(op => {
-        const seleccionada = (r.seleccionadas || []).includes(op.texto);
-        let cls = 'neutral', icon = '·', tag = '';
-        if (op.correcta && seleccionada)  { cls = 'correct';        icon = '✓'; tag = 'Correcta · elegida'; }
-        else if (op.correcta && !seleccionada) { cls = 'correct';   icon = '✓'; tag = 'Correcta · no elegida'; }
-        else if (!op.correcta && seleccionada) { cls = 'wrong-selected'; icon = '✗'; tag = 'Incorrecta · elegida'; }
+        const seleccionada = seleccionadas.includes(op.texto);
+        let cls, icon, tag;
+        if (op.correcta && seleccionada) {
+          cls = 'hit';     icon = '✅'; tag = 'Correcta — la elegiste';
+        } else if (op.correcta && !seleccionada) {
+          cls = 'missed';  icon = '○';  tag = 'Correcta — no la elegiste';
+        } else if (!op.correcta && seleccionada) {
+          cls = 'mistake'; icon = '❌'; tag = 'Incorrecta — la elegiste';
+        } else {
+          cls = 'ignored'; icon = '·';  tag = '';
+        }
         opsHtml += `<div class="op ${cls}">
           <span class="op-icon">${icon}</span>
           <span class="op-text">${esc(op.texto)}</span>
@@ -306,9 +373,8 @@ function mostrarResultados(data) {
         </div>`;
       });
     } else {
-      // Fallback: solo mostrar lo que contestó
       (r.seleccionadas || []).forEach(s => {
-        opsHtml += `<div class="op neutral"><span class="op-icon">·</span><span class="op-text">${esc(s)}</span></div>`;
+        opsHtml += `<div class="op hit"><span class="op-icon">✅</span><span class="op-text">${esc(s)}</span></div>`;
       });
     }
 
@@ -320,6 +386,7 @@ function mostrarResultados(data) {
             <span class="pts">${ptsObt} / ${r.puntajeMax} pts</span>
           </div>
           <div class="q-text">${esc(r.pregunta)}</div>
+          ${summaryHtml}
           ${opsHtml}
         </div>
       </div>`;
