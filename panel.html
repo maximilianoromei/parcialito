@@ -315,7 +315,7 @@
         </div>
         <div class="field">
           <label>URL Google Apps Script</label>
-          <input id="cfg-url" type="url" value="URL_DE_TU_GOOGLE_APPS_SCRIPT" placeholder="https://script.google.com/...">
+          <input id="cfg-url" type="url" value="https://script.google.com/macros/s/AKfycbwpx-n8-Lj10bWrP5l9Hl_4LsCFhYY3MlDnVJwApHCU5iEcRx6pUxa97OKhLk_FiV4/exec" placeholder="https://script.google.com/...">
         </div>
       </div>
       <div class="row2">
@@ -685,7 +685,7 @@ function getConfigObj() {
     titulo: document.getElementById('cfg-titulo').value.trim() || 'Examen',
     subtitulo: document.getElementById('cfg-subtitulo').value.trim() || '',
     timerMinutos: parseInt(document.getElementById('cfg-timer').value) || 30,
-    sheetsWebhookUrl: document.getElementById('cfg-url').value.trim() || 'URL_DE_TU_GOOGLE_APPS_SCRIPT',
+    sheetsWebhookUrl: document.getElementById('cfg-url').value.trim() || 'https://script.google.com/macros/s/AKfycbwpx-n8-Lj10bWrP5l9Hl_4LsCFhYY3MlDnVJwApHCU5iEcRx6pUxa97OKhLk_FiV4/exec',
     cantSimples:   parseInt(document.getElementById('cfg-simples').value)   || 5,
     cantMultiples: parseInt(document.getElementById('cfg-multiples').value) || 5,
     feedbackHabilitado: feedbackHabilitado,
@@ -785,10 +785,12 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cfg-timer').value     = EXAM_CONFIG.timerMinutos || 30;
     document.getElementById('cfg-simples').value   = EXAM_CONFIG.cantSimples   || 5;
     document.getElementById('cfg-multiples').value = EXAM_CONFIG.cantMultiples || 5;
-    // No sobreescribir si ya tiene la URL real
+    // Siempre cargar URL — con fallback a la URL fija
     const urlField = document.getElementById('cfg-url');
     if (EXAM_CONFIG.sheetsWebhookUrl && EXAM_CONFIG.sheetsWebhookUrl !== 'URL_DE_TU_GOOGLE_APPS_SCRIPT') {
       urlField.value = EXAM_CONFIG.sheetsWebhookUrl;
+    } else {
+      urlField.value = 'https://script.google.com/macros/s/AKfycbwpx-n8-Lj10bWrP5l9Hl_4LsCFhYY3MlDnVJwApHCU5iEcRx6pUxa97OKhLk_FiV4/exec';
     }
     feedbackHabilitado = EXAM_CONFIG.feedbackHabilitado || false;
     questions = JSON.parse(JSON.stringify(EXAM_CONFIG.preguntas || []));
