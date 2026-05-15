@@ -1,14 +1,40 @@
-// ════════════════════════════════════════════
-//  config.js — generado por Panel Docente
-//  10/5/2026, 04:12:13
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+//  config.js — CONFIGURACIÓN DEL EXAMEN
+//  Edite este archivo para personalizar el examen.
+//  No es necesario tocar examen.html ni panel.html.
+// ════════════════════════════════════════════════════════
 
 const EXAM_CONFIG = {
-  titulo:    "Derecho Crediticio Bursatil e Insolvencia",
-  subtitulo: "Cátedra Favier Dubois - Facultad de Ciencias Económicas - UBA",
-  timerMinutos: 12,
-  sheetsWebhookUrl: "https://script.google.com/macros/s/AKfycbwpx-n8-Lj10bWrP5l9Hl_4LsCFhYY3MlDnVJwApHCU5iEcRx6pUxa97OKhLk_FiV4/exec",
-  feedbackHabilitado: true,
+
+  // ── Datos del examen ──────────────────────────────────
+  titulo:    "Derecho Comercial — Parcialito N° 1",
+  subtitulo: "Cátedra Favier Dubois · UBA Derecho",
+
+  // ── Tiempo total del examen (en minutos) ─────────────
+  timerMinutos: 30,
+
+  // ── Selección aleatoria de preguntas ─────────────────
+  // El sistema elige esta cantidad de cada tipo del banco
+  // Cargue todas las preguntas que quiera en el banco (mínimo 5 de cada tipo)
+  cantSimples:   5,
+  cantMultiples: 5,
+
+  // ── Google Apps Script webhook URL ───────────────────
+  // Pegue aquí la URL que obtiene al publicar el Apps Script
+  sheetsWebhookUrl: "URL_DE_TU_GOOGLE_APPS_SCRIPT",
+
+  // ── Habilitar resultados ──────────────────────────────
+  // false → los alumnos NO pueden ver sus resultados todavía
+  // true  → los alumnos SÍ pueden ver sus resultados
+  // Cambie a true, genere y suba config.js cuando quiera habilitarlo.
+  feedbackHabilitado: false,
+
+  // ── Preguntas ─────────────────────────────────────────
+  // tipo: "simple"   → una sola respuesta correcta
+  // tipo: "multiple" → varias respuestas correctas
+  // puntaje: número de puntos que vale la pregunta
+  // opciones: array de { texto, correcta: true/false }
+  // ─────────────────────────────────────────────────────
   preguntas: [
     {
       tipo: "simple",
@@ -67,4 +93,8 @@ const EXAM_CONFIG = {
       ]
     }
   ]
+  // ─────────────────────────────────────────────────────
+  // Para agregar más preguntas, copie un bloque de {}
+  // y péguelo antes del cierre del array ] arriba.
+  // ─────────────────────────────────────────────────────
 };

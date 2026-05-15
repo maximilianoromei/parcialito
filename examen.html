@@ -497,13 +497,38 @@ document.addEventListener('keydown', e => {
 function loadConfig() {
   if (typeof EXAM_CONFIG !== 'undefined') {
     CFG = EXAM_CONFIG;
-    PREGUNTAS = CFG.preguntas || [];
     document.getElementById('title-ident').textContent = CFG.titulo || 'Examen';
     document.getElementById('subtitle-ident').textContent = CFG.subtitulo || 'Complete sus datos para comenzar';
     document.title = CFG.titulo || 'Examen';
   } else {
     showToast('⚠ No se encontró config.js', 4000);
   }
+}
+
+// ── Selección aleatoria de preguntas ──
+function seleccionarPreguntas() {
+  const banco = CFG.preguntas || [];
+  const simples   = banco.filter(q => q.tipo !== 'multiple');
+  const multiples = banco.filter(q => q.tipo === 'multiple');
+  const cantSimples   = CFG.cantSimples   || 5;
+  const cantMultiples = CFG.cantMultiples || 5;
+
+  if (simples.length < cantSimples) {
+    showToast(`⚠ Se necesitan al menos ${cantSimples} preguntas simples en el banco`);
+    return false;
+  }
+  if (multiples.length < cantMultiples) {
+    showToast(`⚠ Se necesitan al menos ${cantMultiples} preguntas múltiples en el banco`);
+    return false;
+  }
+
+  const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+  const elegidas = [
+    ...shuffle(simples).slice(0, cantSimples),
+    ...shuffle(multiples).slice(0, cantMultiples)
+  ];
+  PREGUNTAS = shuffle(elegidas);
+  return true;
 }
 
 // ── Identification ──
@@ -513,7 +538,8 @@ function startExam() {
   if (!nombre) { showToast('Ingrese apellido y nombre'); return; }
   if (!dni || !/^\d{7,8}$/.test(dni)) { showToast('Ingrese un DNI válido (7-8 dígitos)'); return; }
   alumno = { nombre, dni };
-  if (!PREGUNTAS.length) { showToast('No hay preguntas cargadas'); return; }
+  if (!CFG.preguntas || !CFG.preguntas.length) { showToast('No hay preguntas cargadas'); return; }
+  if (!seleccionarPreguntas()) return;
   currentQ = 0;
   respuestas = {};
   submitted = false;
@@ -651,12 +677,18 @@ function buildPayload(tiempoUsado) {
     const correctas = q.opciones.map((o, i) => o.correcta ? i : -1).filter(x => x !== -1);
     const isMulti = q.tipo === 'multiple';
     let correcta = false;
+    let pts = 0;
     if (isMulti) {
-      correcta = sel.length === correctas.length && sel.every(s => correctas.includes(s));
+      const totalCorrectas = correctas.length;
+      const valorPorOpcion = (q.puntaje || 1) / totalCorrectas;
+      const aciertos = sel.filter(s => correctas.includes(s)).length;
+      const incorrectas = sel.filter(s => !correctas.includes(s)).length;
+      pts = Math.max(0, Math.round((aciertos - incorrectas) * valorPorOpcion * 100) / 100);
+      correcta = pts === (q.puntaje || 1);
     } else {
       correcta = sel.length === 1 && correctas.includes(sel[0]);
+      pts = correcta ? (q.puntaje || 1) : 0;
     }
-    const pts = correcta ? (q.puntaje || 1) : 0;
     data.respuestas[qi] = {
       pregunta: q.pregunta,
       seleccionadas: sel.map(i => q.opciones[i].texto),
@@ -665,10 +697,13 @@ function buildPayload(tiempoUsado) {
       puntajeMax: q.puntaje || 1
     };
   });
-  const total = Object.values(data.respuestas).reduce((s, r) => s + r.puntaje, 0);
-  const maxTotal = PREGUNTAS.reduce((s, q) => s + (q.puntaje || 1), 0);
-  data.puntajeTotal = total;
-  data.puntajeMaximo = maxTotal;
+  const totalRaw = Object.values(data.respuestas).reduce((s, r) => s + r.puntaje, 0);
+  const maxRaw   = PREGUNTAS.reduce((s, q) => s + (q.puntaje || 1), 0);
+  // Escalar a base 10
+  data.puntajeTotal   = maxRaw > 0 ? Math.round((totalRaw / maxRaw) * 10 * 100) / 100 : 0;
+  data.puntajeMaximo  = 10;
+  data.puntajeRaw     = totalRaw;
+  data.puntajeMaxRaw  = maxRaw;
   return data;
 }
 
