@@ -1,12 +1,12 @@
 // ════════════════════════════════════════════
 //  config.js — generado por Panel Docente
-//  15/5/2026, 10:39:34
+//  15/5/2026, 10:42:33
 // ════════════════════════════════════════════
 
 const EXAM_CONFIG = {
   titulo:    "Derecho Comercial — Parcialito N° 1",
   subtitulo: "Cátedra Favier Dubois · UBA Derecho",
-  timerMinutos: 30,
+  timerMinutos: 9,
   sheetsWebhookUrl: "https://script.google.com/macros/s/AKfycbwpx-n8-Lj10bWrP5l9Hl_4LsCFhYY3MlDnVJwApHCU5iEcRx6pUxa97OKhLk_FiV4/exec",
   cantSimples:   5,
   cantMultiples: 5,
