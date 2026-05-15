@@ -142,6 +142,75 @@
   }
   .score-sub { color: var(--text2); font-size: 0.82rem; }
 
+  /* ── DESGLOSE DE NOTA ── */
+  .desglose-wrap {
+    margin-top: 16px;
+    text-align: left;
+  }
+  .desglose-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    padding: 7px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: block;
+    margin: 0 auto;
+  }
+  .desglose-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .desglose-content {
+    display: none;
+    margin-top: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .desglose-content.open { display: block; }
+  .desglose-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .desglose-table th {
+    background: rgba(255,255,255,0.04);
+    padding: 9px 14px;
+    text-align: left;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+  }
+  .desglose-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .desglose-table tr:last-child td { border-bottom: none; }
+  .desglose-table .pts-cell { font-family: 'DM Mono', monospace; text-align: right; }
+  .desglose-table .pts-cell.full  { color: var(--correct); font-weight: 600; }
+  .desglose-table .pts-cell.partial { color: var(--warn); font-weight: 600; }
+  .desglose-table .pts-cell.zero { color: var(--wrong); }
+  .desglose-table tr.total-row td { 
+    background: rgba(255,255,255,0.04); 
+    font-weight: 600; 
+    border-top: 2px solid var(--border);
+  }
+  .desglose-formula {
+    padding: 12px 14px;
+    font-size: 0.82rem;
+    color: var(--text2);
+    border-top: 1px solid var(--border);
+    background: rgba(124,106,240,0.05);
+    font-family: 'DM Mono', monospace;
+    text-align: center;
+  }
+  .desglose-formula strong { color: var(--accent); font-size: 1rem; }
+
   .q-block { margin-bottom: 14px; }
   .q-block .card { padding: 22px 24px; }
   .q-label {
@@ -172,20 +241,23 @@
     font-size: 0.9rem;
     border: 1px solid transparent;
   }
-  /* Eligió y era correcta — verde sólido */
-  .op.hit       { background: var(--correct-bg); border-color: var(--correct-border); color: var(--correct); font-weight: 600; }
-  /* No la eligió pero era correcta — verde suave, borde punteado */
-  .op.missed    { background: rgba(76,175,136,0.05); border: 1.5px dashed rgba(76,175,136,0.4); color: var(--correct); opacity: 0.75; }
-  /* La eligió pero era incorrecta — rojo */
-  .op.mistake   { background: var(--wrong-bg); border-color: var(--wrong-border); color: var(--wrong); font-weight: 600; }
-  /* No la eligió y era incorrecta — gris, sin destacar */
-  .op.ignored   { color: var(--text2); opacity: 0.5; }
-  .op-icon      { flex-shrink: 0; width: 20px; font-size: 1rem; }
-  .op-text      { flex: 1; line-height: 1.4; }
-  .op-tag       { font-size: 0.72rem; font-weight: 500; white-space: nowrap; flex-shrink: 0; margin-top: 2px; padding: 2px 8px; border-radius: 10px; }
-  .op.hit     .op-tag { background: rgba(76,175,136,0.2);  color: var(--correct); }
-  .op.missed  .op-tag { background: rgba(76,175,136,0.1);  color: var(--correct); }
-  .op.mistake .op-tag { background: rgba(224,92,106,0.15); color: var(--wrong); }
+  /* ✅ Eligió y era correcta */
+  .op.hit     { background: var(--correct-bg); border-color: var(--correct-border); color: var(--correct); font-weight: 600; }
+  /* ○ Era correcta pero no la eligió */
+  .op.missed  { background: rgba(76,175,136,0.04); border: 1.5px dashed rgba(76,175,136,0.35); color: var(--correct); }
+  /* ❌ La eligió pero era incorrecta */
+  .op.mistake { background: var(--wrong-bg); border-color: var(--wrong-border); color: var(--wrong); font-weight: 600; }
+  /* · No la eligió y era incorrecta — invisible, no confunde */
+  .op.ignored { color: var(--text2); opacity: 0.35; }
+  .op-icon    { flex-shrink: 0; width: 22px; font-size: 1rem; }
+  .op-text    { flex: 1; line-height: 1.4; }
+  /* Etiqueta de dos líneas: qué hizo el alumno + veredicto */
+  .op-tag-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; margin-top: 1px; }
+  .op-tag      { font-size: 0.7rem; font-weight: 600; white-space: nowrap; padding: 2px 8px; border-radius: 10px; }
+  .tag-elegiste   { background: rgba(124,106,240,0.18); color: #a89cf0; }
+  .tag-correcto   { background: rgba(76,175,136,0.2);   color: var(--correct); }
+  .tag-incorrecto { background: rgba(224,92,106,0.18);  color: var(--wrong); }
+  .tag-faltó      { background: rgba(76,175,136,0.1);   color: var(--correct); }
   /* Mensaje resumen debajo del enunciado */
   .q-summary {
     font-size: 0.82rem;
@@ -244,6 +316,25 @@
       <div class="exam-name"    id="res-examen"></div>
       <div class="score-badge"  id="res-score"></div>
       <div class="score-sub"    id="res-sub"></div>
+      <div class="desglose-wrap">
+        <button class="desglose-toggle" onclick="toggleDesglose()">▶ ¿Cómo se calculó mi nota?</button>
+        <div class="desglose-content" id="desglose-content">
+          <table class="desglose-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Pregunta</th>
+                <th>Tipo</th>
+                <th style="text-align:right">Obtenido</th>
+                <th style="text-align:right">Máximo</th>
+              </tr>
+            </thead>
+            <tbody id="desglose-tbody"></tbody>
+            <tfoot id="desglose-tfoot"></tfoot>
+          </table>
+          <div class="desglose-formula" id="desglose-formula"></div>
+        </div>
+      </div>
     </div>
     <div id="res-questions"></div>
     <div style="text-align:center;margin-top:20px">
@@ -288,6 +379,13 @@ function buscarResultados() {
     .catch(() => toast('Error al conectar. Intente nuevamente.'));
 }
 
+function toggleDesglose() {
+  const el = document.getElementById('desglose-content');
+  const btn = document.querySelector('.desglose-toggle');
+  el.classList.toggle('open');
+  btn.textContent = el.classList.contains('open') ? '▼ ¿Cómo se calculó mi nota?' : '▶ ¿Cómo se calculó mi nota?';
+}
+
 function mostrarResultados(data) {
   document.getElementById('view-form').style.display = 'none';
   document.getElementById('view-results').style.display = 'block';
@@ -298,6 +396,40 @@ function mostrarResultados(data) {
   document.getElementById('res-sub').textContent    = `Entregado el ${data.fecha}`;
 
   const detalle = typeof data.detalleJSON === 'string' ? JSON.parse(data.detalleJSON) : data.detalleJSON;
+
+  // ── Poblar tabla de desglose ──
+  const tbody = document.getElementById('desglose-tbody');
+  const tfoot = document.getElementById('desglose-tfoot');
+  tbody.innerHTML = '';
+  let totalRaw = 0, maxRaw = 0;
+  Object.entries(detalle).forEach(([qi, r], idx) => {
+    const pts    = r.puntaje;
+    const max    = r.puntajeMax;
+    const isMulti = (typeof EXAM_CONFIG !== 'undefined' && EXAM_CONFIG.preguntas && EXAM_CONFIG.preguntas[parseInt(qi)])
+      ? EXAM_CONFIG.preguntas[parseInt(qi)].tipo === 'multiple' : false;
+    const tipo   = isMulti ? 'Múltiple' : 'Simple';
+    const pctCls = pts === max ? 'full' : pts > 0 ? 'partial' : 'zero';
+    // Truncate question text
+    const txt = r.pregunta.length > 55 ? r.pregunta.substring(0, 55) + '…' : r.pregunta;
+    totalRaw += pts;
+    maxRaw   += max;
+    tbody.innerHTML += `<tr>
+      <td style="color:var(--text2)">${idx+1}</td>
+      <td style="color:var(--text)">${esc(txt)}</td>
+      <td style="color:var(--text2)">${tipo}</td>
+      <td class="pts-cell ${pctCls}">${pts}</td>
+      <td class="pts-cell" style="color:var(--text2)">${max}</td>
+    </tr>`;
+  });
+  tfoot.innerHTML = `<tr class="total-row">
+    <td colspan="3">Total bruto</td>
+    <td class="pts-cell">${Math.round(totalRaw*100)/100}</td>
+    <td class="pts-cell" style="color:var(--text2)">${maxRaw}</td>
+  </tr>`;
+  const notaFinal = maxRaw > 0 ? Math.round((totalRaw/maxRaw)*10*100)/100 : 0;
+  document.getElementById('desglose-formula').innerHTML =
+    `${Math.round(totalRaw*100)/100} ÷ ${maxRaw} × 10 = <strong>${notaFinal}</strong>`;
+
   const container = document.getElementById('res-questions');
   container.innerHTML = '';
 
@@ -356,20 +488,36 @@ function mostrarResultados(data) {
 
       cfgQ.opciones.forEach(op => {
         const seleccionada = seleccionadas.includes(op.texto);
-        let cls, icon, tag;
+        let cls, icon, tagsHtml = '';
         if (op.correcta && seleccionada) {
-          cls = 'hit';     icon = '✅'; tag = 'Correcta — la elegiste';
+          cls  = 'hit';
+          icon = '✅';
+          tagsHtml = `<div class="op-tag-wrap">
+            <span class="op-tag tag-elegiste">✔ Vos la marcaste</span>
+            <span class="op-tag tag-correcto">Era correcta</span>
+          </div>`;
         } else if (op.correcta && !seleccionada) {
-          cls = 'missed';  icon = '○';  tag = 'Correcta — no la elegiste';
+          cls  = 'missed';
+          icon = '○';
+          tagsHtml = `<div class="op-tag-wrap">
+            <span class="op-tag tag-faltó">No la marcaste</span>
+            <span class="op-tag tag-correcto">Era correcta</span>
+          </div>`;
         } else if (!op.correcta && seleccionada) {
-          cls = 'mistake'; icon = '❌'; tag = 'Incorrecta — la elegiste';
+          cls  = 'mistake';
+          icon = '❌';
+          tagsHtml = `<div class="op-tag-wrap">
+            <span class="op-tag tag-elegiste">✔ Vos la marcaste</span>
+            <span class="op-tag tag-incorrecto">Era incorrecta</span>
+          </div>`;
         } else {
-          cls = 'ignored'; icon = '·';  tag = '';
+          cls  = 'ignored';
+          icon = '·';
         }
         opsHtml += `<div class="op ${cls}">
           <span class="op-icon">${icon}</span>
           <span class="op-text">${esc(op.texto)}</span>
-          ${tag ? `<span class="op-tag">${tag}</span>` : ''}
+          ${tagsHtml}
         </div>`;
       });
     } else {
